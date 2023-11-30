@@ -26,7 +26,7 @@ public class PlayerController : MonoBehaviour
 
     public bool isjumping;
 
-    PlayerAnimationController playerAnimationController;
+    Animator animator;
 
     [SerializeField]
     Camera playerCamera;
@@ -35,7 +35,7 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         playerControls = new PlayerControls();
-        playerAnimationController = GetComponent<PlayerAnimationController>();
+        animator = GetComponent<Animator>();
 
         CursorIsVisible(false);
     }
@@ -54,23 +54,29 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        
+
         forceDirection += move.ReadValue<Vector2>().x * GetCameraRight(playerCamera) * movementForce;
         forceDirection += move.ReadValue<Vector2>().y * GetCameraForward(playerCamera) * movementForce;
 
         rb.AddForce(forceDirection, ForceMode.Impulse);
         forceDirection = Vector3.zero;
 
-        if (rb.velocity.y < 0f)
+        if (rb.velocity.y < 0.1f)
         {
             rb.velocity -= Vector3.down * Physics.gravity.y * Time.fixedDeltaTime;
+            
         }
-
 
         Vector3 horizontalVelocity = rb.velocity;
         horizontalVelocity.y = 0f;
         if (horizontalVelocity.sqrMagnitude > maxSpeed * maxSpeed)
+        {
+            animator.SetBool("IsGrounded", true);
+            animator.SetBool("IsJumping", false);
             rb.velocity = horizontalVelocity.normalized * maxSpeed + Vector3.up * rb.velocity.y;
+        }
+
+        
 
         LookAt();
     }
@@ -104,6 +110,9 @@ public class PlayerController : MonoBehaviour
     {
         if (IsGrounded())
         {
+            isjumping = true;
+            animator.SetBool("IsGrounded", false);
+            animator.SetBool("IsJumping", true);
             forceDirection += Vector3.up * jumpedForce;
         }
     }
@@ -123,12 +132,12 @@ public class PlayerController : MonoBehaviour
 
     private void CursorIsVisible(bool visible)
     {
-        Cursor.visible= visible;
+        Cursor.visible = visible;
 
         if (!visible)
             Cursor.lockState = CursorLockMode.Locked;
         else
-            Cursor.lockState = CursorLockMode.None; 
+            Cursor.lockState = CursorLockMode.None;
 
     }
 
